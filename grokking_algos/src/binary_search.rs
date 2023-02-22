@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 // we still take the pain to assert that this is in fact the
 // case whenever we pull values from corpus. panic in case of
 // a violation.
-pub fn find_in_sorted<T: Eq + PartialOrd + Ord + Copy>(corpus: &Vec<T>, el: T) -> Option<usize> {
+pub fn find_in_sorted<T: Ord + Copy>(corpus: &Vec<T>, el: T) -> Option<usize> {
     // if corpus is empty, we definitely can't find `el` in there.
     // return None, early.
     let corpus_size = corpus.len();
@@ -31,16 +31,8 @@ pub fn find_in_sorted<T: Eq + PartialOrd + Ord + Copy>(corpus: &Vec<T>, el: T) -
     None
 }
 
-pub fn find_in_sorted_recursive<T: Eq + PartialOrd + Ord + Copy>(
-    corpus: &Vec<T>,
-    el: T,
-) -> Option<usize> {
-    fn inner<T: Eq + PartialOrd + Ord + Copy>(
-        corpus: &Vec<T>,
-        el: &T,
-        lower: usize,
-        higher: usize,
-    ) -> Option<usize> {
+pub fn find_in_sorted_recursive<T: Ord + Copy>(corpus: &Vec<T>, el: T) -> Option<usize> {
+    fn inner<T: Ord + Copy>(corpus: &Vec<T>, el: &T, lower: usize, higher: usize) -> Option<usize> {
         let middle_index = (lower + higher) / 2;
 
         #[rustfmt::skip]
@@ -62,47 +54,53 @@ pub fn find_in_sorted_recursive<T: Eq + PartialOrd + Ord + Copy>(
     inner(corpus, &el, 0, corpus.len())
 }
 
-#[test]
-fn find_in_sorted_element_found() {
-    let corpus = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
-    let expected_member = 4;
-    match find_in_sorted(&corpus, expected_member) {
-        Some(found) => assert_eq!(3, found),
-        None => panic!("expected to find element"),
-    };
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    match find_in_sorted_recursive(&corpus, expected_member) {
-        Some(found) => assert_eq!(3, found),
-        None => panic!("expected to find element"),
-    };
-}
+    #[test]
+    fn find_in_sorted_element_found() {
+        let corpus = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let expected_member = 4;
+        match find_in_sorted(&corpus, expected_member) {
+            Some(found) => assert_eq!(3, found),
+            None => panic!("expected to find element"),
+        };
 
-#[test]
-fn find_in_sorted_elemnt_not_found() {
-    let corpus = vec![1, 2];
-    let non_member_element = 3;
-    match find_in_sorted(&corpus, non_member_element) {
-        Some(v) => panic!("found {v} while looking for {non_member_element}"),
-        None => (),
+        match find_in_sorted_recursive(&corpus, expected_member) {
+            Some(found) => assert_eq!(3, found),
+            None => panic!("expected to find element"),
+        };
     }
 
-    match find_in_sorted_recursive(&corpus, non_member_element) {
-        Some(v) => panic!("found {v} while looking for {non_member_element}"),
-        None => (),
-    }
-}
+    #[test]
+    fn find_in_sorted_elemnt_not_found() {
+        let corpus = vec![1, 2];
+        let non_member_element = 3;
+        match find_in_sorted(&corpus, non_member_element) {
+            Some(v) => panic!("found {v} while looking for {non_member_element}"),
+            None => (),
+        }
 
-#[test]
-fn find_in_sorted_corpus_empty() {
-    let corpus = vec![];
-    let non_member_element = 3;
-    match find_in_sorted(&corpus, non_member_element) {
-        Some(v) => panic!("found {v} while looking for {non_member_element} in empty corpus"),
-        None => (),
+        match find_in_sorted_recursive(&corpus, non_member_element) {
+            Some(v) => panic!("found {v} while looking for {non_member_element}"),
+            None => (),
+        }
     }
 
-    match find_in_sorted_recursive(&corpus, non_member_element) {
-        Some(v) => panic!("found {v} while looking for {non_member_element} in empty corpus"),
-        None => (),
+    #[test]
+    fn find_in_sorted_corpus_empty() {
+        let corpus = vec![];
+        let non_member_element = 3;
+        assert_eq!(0, corpus.len());
+        match find_in_sorted(&corpus, non_member_element) {
+            Some(v) => panic!("found {v} while looking for {non_member_element} in empty corpus"),
+            None => (),
+        }
+
+        match find_in_sorted_recursive(&corpus, non_member_element) {
+            Some(v) => panic!("found {v} while looking for {non_member_element} in empty corpus"),
+            None => (),
+        }
     }
 }
